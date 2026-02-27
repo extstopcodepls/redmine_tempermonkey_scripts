@@ -11,7 +11,7 @@
 (function() {
     'use strict';
 
-    var buttons = document.querySelector('.contextual');
+    var buttons = document.querySelector('#content .contextual');
 
     var newButton = document.createElement("a");
     newButton.setAttribute('href', "#");
