@@ -11,6 +11,48 @@
 (function() {
     'use strict';
 
+    setupCopyBranchName();
+
+    setupCopyIssueNameForCommit();
+
+})();
+
+function setupCopyIssueNameForCommit() {
+    const element = document.querySelector('#content > h2');
+
+    wrapH2WithAnchor(element);
+
+    element.addEventListener('click', function(e) {
+        let text = e.currentTarget.textContent;
+        navigator.clipboard.writeText(text);
+    });
+
+}
+
+function wrapH2WithAnchor(element) {
+  if (!element || element.tagName !== 'H2') return;
+
+  // skip if already wrapped
+  if (element.parentElement?.tagName === 'A') return;
+
+  const a = document.createElement('a');
+  a.href = '#';
+  a.style.cursor = 'pointer';
+  a.style.color = '#467aa7';
+  a.style.textDecoration = 'underline';
+
+  element.style.cursor = 'pointer';
+  element.style.color = '#467aa7';
+  element.style.textDecoration = 'underline';
+
+  // prevent navigation
+  a.addEventListener('click', e => e.preventDefault());
+
+  element.replaceWith(a);
+  a.appendChild(element);
+}
+
+function setupCopyBranchName() {
     var buttons = document.querySelector('#content .contextual');
 
     var newButton = document.createElement("a");
@@ -46,4 +88,4 @@
             navigator.clipboard.writeText(`uwaga_${issueId}`);
         }
     }
-})();
+}
