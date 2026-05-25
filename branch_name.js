@@ -1,19 +1,23 @@
 // ==UserScript==
 // @name         Redmine AdditionalButtons whole these
 // @namespace    http://pasio.corp
-// @version      2026-02-19
+// @version      2026-05-25
 // @description  A żeby łatwiej było
 // @author       @extstopcodepls
 // @match        https://redmine.x-code.pl/issues/*
-// @grant        none
+// @grant        GM_openInTab
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    setupCopyBranchName();
+    const commitIssueName = setupCopyIssueNameForCommit();
 
-    setupCopyIssueNameForCommit();
+    setupCopyBranchName();
+    setupSearchForMrs(commitIssueName);
+
 
 })();
 
@@ -27,6 +31,7 @@ function setupCopyIssueNameForCommit() {
         navigator.clipboard.writeText(text);
     });
 
+    return element;
 }
 
 function wrapH2WithAnchor(element) {
@@ -52,6 +57,40 @@ function wrapH2WithAnchor(element) {
   a.appendChild(element);
 }
 
+function setupSearchForMrs(commitIssueName) {
+    var buttons = document.querySelector('#content .contextual');
+
+    var newButton = document.createElement("a");
+    newButton.setAttribute('href', "#");
+    newButton.setAttribute('class', "icon icon-summary");
+
+    var span = document.createElement("span");
+    span.setAttribute('class', 'icon-label');
+    span.innerText = "Poszukaj MR";
+    newButton.insertAdjacentElement("beforeend", span);
+
+    buttons.insertBefore(newButton, buttons.querySelector('.icon-edit'))
+
+    newButton.onclick = function() {
+
+        let gitlabUrl = GM_getValue('pasio::gitlab', null);
+
+        if (!gitlabUrl) {
+            gitlabUrl = prompt('Podaj adres url gitlaba - bez /');
+            GM_setValue('pasio::gitlab', gitlabUrl);
+        }
+
+        const url = new URL(`${gitlabUrl}/dashboard/merge_requests/search?scope=all&state=all`);
+
+        url.searchParams.set('search', commitIssueName.textContent);
+
+        GM_openInTab(url.toString(), {
+            active: true,
+            insert: true
+        });
+    }
+}
+
 function setupCopyBranchName() {
     var buttons = document.querySelector('#content .contextual');
 
@@ -61,7 +100,6 @@ function setupCopyBranchName() {
 
     var span = document.createElement("span");
     span.setAttribute('class', 'icon-label');
-    //span.innerText = "Ω Nazwa brancha";
     span.innerText = "Nazwa brancha";
     newButton.insertAdjacentElement("beforeend", span);
 
