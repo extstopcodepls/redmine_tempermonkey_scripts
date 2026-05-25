@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine Programming Activity As Default
 // @namespace    http://pasio-redmine.org
-// @version      2026-05-25
+// @version      2026-05-25-1
 // @description  try to take over the world!
 // @author       You
 // @match        https://redmine.x-code.pl/issues/*/time_entries/new
