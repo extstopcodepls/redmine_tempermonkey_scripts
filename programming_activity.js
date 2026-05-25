@@ -11,5 +11,29 @@
 
 (function() {
     const activity = document.querySelector('#time_entry_activity_id');
+
     activity.value = 10;
+
+    const timeEntryInput = document.querySelector('#time_entry_hours')
+    const timeEntryParent = timeEntryInput.closest('p');
+
+    const halfHour = createA(timeEntryInput, '0.5');
+    const hour = createA(timeEntryInput, '1');
+    const twoHours = createA(timeEntryInput, '2');
+    const sevenHours = createA(timeEntryInput, '7');
+
+    timeEntryParent.appendChild(sevenHours);
+    timeEntryParent.appendChild(twoHours);
+    timeEntryParent.appendChild(hour);
+    timeEntryParent.appendChild(halfHour);
+    
+    function createA(timeEntryInput, timeValue) {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.onclick = function (e) {
+            timeEntryInput.value = timeValue;
+        }
+        a.textContent = `[${timeValue} hours] `;
+        return a;
+    }
 })();
