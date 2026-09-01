@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine Closed Removed From Subtasks
 // @namespace    https://github.com/extstopcodepls/redmine_closed_substasks_remover
-// @version      0.5
+// @version      0.6
 // @description  Usuwa linki z podzagadnień, które są zamknięte
 // @author       Paweł Borawski
 // @match        https://redmine.x-code.pl/issues/*
@@ -117,10 +117,79 @@ function setupCorrelatedTasks() {
     }
 }
 
+function colorTreeRows() {
+    document.querySelectorAll('tr').forEach(tr => {
+        const text = tr.textContent;
+
+        if (!text.includes('Błąd') && !text.includes('Zadanie')) {
+            return;
+        }
+
+        const depthClass = [...tr.classList].find(c => /^idnt-\d+$/.test(c));
+        const depth = depthClass ? Number(depthClass.slice(5)) : 0;
+
+        const opacity = Math.max(0.38 - depth * 0.055, 0.08);
+
+        if (text.includes('Błąd')) {
+            tr.style.backgroundColor = `rgba(180, 45, 45, ${opacity})`;
+        } else if (text.includes('Zadanie')) {
+            tr.style.backgroundColor = `rgba(45, 105, 180, ${opacity})`;
+        }
+    });
+}
+
+function getDepth(tr) {
+    const depthClass = [...tr.classList].find(c => /^idnt-\d+$/.test(c));
+    return depthClass ? Number(depthClass.slice(5)) : 0;
+}
+
+function containsClosed(tr) {
+    return [...tr.querySelectorAll('td')]
+        .some(td => td.textContent.includes('Zamknięty'));
+}
+
+function handleRowClick(event) {
+    const tr = event.target.closest('tr');
+    if (!tr) return;
+
+    if (containsClosed(tr)) {
+        return;
+    }
+
+    const depth = getDepth(tr);
+    const collapsed = tr.dataset.collapsed === 'true';
+
+    tr.dataset.collapsed = String(!collapsed);
+
+    let next = tr.nextElementSibling;
+
+    while (next) {
+        const nextDepth = getDepth(next);
+
+        if (nextDepth <= depth) {
+            break;
+        }
+
+        if (!containsClosed(next)) {
+            next.style.display = collapsed ? '' : 'none';
+        }
+
+        next = next.nextElementSibling;
+    }
+}
+
+function initTreeCollapse() {
+    document.addEventListener('click', handleRowClick);
+}
+
 (function() {
     'use strict';
 
     setupSubtasks();
 
     setupCorrelatedTasks();
+
+    colorTreeRows();
+
+    initTreeCollapse();
 })();
