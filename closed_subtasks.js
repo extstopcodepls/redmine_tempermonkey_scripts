@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine Closed Removed From Subtasks
 // @namespace    https://github.com/extstopcodepls/redmine_closed_substasks_remover
-// @version      0.7
+// @version      0.8
 // @description  Usuwa linki z podzagadnień, które są zamknięte
 // @author       Paweł Borawski
 // @match        https://redmine.x-code.pl/issues/*
@@ -328,7 +328,7 @@ function addTreeControls() {
 
     const collapseLink = document.createElement('a');
     collapseLink.href = '#';
-    collapseLink.textContent = 'Zwiń';
+    collapseLink.textContent = 'Pokaż wszystkie';
     collapseLink.style.marginRight = '10px';
 
     const showLink = document.createElement('a');
@@ -347,6 +347,8 @@ function addTreeControls() {
 
     controls.append(collapseLink, showLink);
     p.insertAdjacentElement('beforeend', controls);
+
+    addTypeFilterControls(p);
 }
 
 function addTreeSearch() {
@@ -478,6 +480,58 @@ function clearSearchHighlights() {
     });
 
     getTree()?.normalize();
+}
+
+function showRowsByType(type) {
+    const rows = [...getTreeRows()];
+    const rowsToShow = new Set();
+
+    rows.forEach(tr => {
+        if (isClosed(tr)) return;
+
+        const matches = [...tr.querySelectorAll('td')]
+            .some(td => td.textContent.includes(type));
+
+        if (!matches) return;
+
+        rowsToShow.add(tr);
+
+        getAncestors(tr).forEach(parent => {
+            if (!isClosed(parent)) {
+                rowsToShow.add(parent);
+            }
+        });
+    });
+
+    rows.forEach(tr => {
+        if (!isClosed(tr)) {
+            setRowVisible(tr, rowsToShow.has(tr));
+        }
+    });
+}
+
+function addTypeFilterControls(p) {
+    const errorLink = document.createElement('a');
+    errorLink.href = '#';
+    errorLink.textContent = 'Błąd';
+    errorLink.style.marginLeft = '10px';
+
+    const taskLink = document.createElement('a');
+    taskLink.href = '#';
+    taskLink.textContent = 'Zadanie';
+    taskLink.style.marginLeft = '10px';
+
+    errorLink.addEventListener('click', event => {
+        event.preventDefault();
+        showRowsByType('Błąd');
+    });
+
+    taskLink.addEventListener('click', event => {
+        event.preventDefault();
+        showRowsByType('Zadanie');
+    });
+
+    p.append(errorLink, taskLink);
 }
 
 function initTreeCollapse() {
