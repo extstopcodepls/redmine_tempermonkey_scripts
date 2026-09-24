@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Redmine - podgląd podzadań w iframe
 // @namespace    redmine-subtask-preview
-// @version      1.2.0
+// @version      1.2.1
 // @description  Podgląd podzadań Redmine w wysuwanym panelu iframe
-// @match        https://redmine.x-code.pl/issues/*
+// @match        https://redmine.x-code.pl/issues*
 // @match        https://redmine.x-code.pl/projects/*
 // @grant        none
 // @run-at       document-idle
