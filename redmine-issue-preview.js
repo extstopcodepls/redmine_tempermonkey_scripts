@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine - podgląd podzadań w iframe
 // @namespace    redmine-subtask-preview
-// @version      1.0.0
+// @version      1.1.0
 // @description  Podgląd podzadań Redmine w wysuwanym panelu iframe
 // @match        https://redmine.x-code.pl/issues/*
 // @match        https://redmine.x-code.pl/projects/*
@@ -12,16 +12,6 @@
 
 (function () {
     'use strict';
-
-    /*
-     * ZMIEŃ:
-     *
-     *   https://YOUR-REDMINE-HOST/*
-     *
-     * np. na:
-     *
-     *   https://redmine.example.com/*
-     */
 
     // Skrypt może działać tylko w głównym oknie.
     if (window.self !== window.top) {
@@ -42,18 +32,17 @@
         'table.list.issues tr[id^="issue-"] td.parent-subject a[href]'
     ].join(', ');
 
-    const DEFAULT_WIDTH = Math.min(
-        900,
-        Math.max(550, window.innerWidth * 0.48)
-    );
-
-    const MIN_WIDTH = 400;
+    const DEFAULT_WIDTH = 950;
+    const MIN_WIDTH = 450;
 
     let panel = null;
     let iframe = null;
     let titleElement = null;
     let openOriginalLink = null;
     let loadingElement = null;
+
+    let isFullscreen = false;
+    let widthBeforeFullscreen = null;
 
     // -------------------------------------------------------------------------
     // Sprawdzanie adresu zagadnienia
@@ -121,115 +110,146 @@
                 "
             >
                 <div
-                    style="
-                        flex: 0 0 46px;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        padding: 0 8px 0 12px;
-                        background: #f5f5f5;
-                        border-bottom: 1px solid #ccc;
-                        font-family: Arial, Helvetica, sans-serif;
-                        box-sizing: border-box;
-                    "
-                >
-                    <button
-                        id="redmine-preview-back"
-                        type="button"
-                        title="Wstecz"
-                        style="
-                            border: 0;
-                            background: transparent;
-                            cursor: pointer;
-                            font-size: 20px;
-                            padding: 5px 8px;
-                        "
-                    >
-                        ←
-                    </button>
+    style="
+        flex: 0 0 46px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px 0 12px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ccc;
+        font-family: Arial, Helvetica, sans-serif;
+        box-sizing: border-box;
+    "
+>
+    <button
+        id="redmine-preview-go"
+        type="button"
+        title="Przejdź do tej strony"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 8px;
+        "
+    >
+        ⇱
+    </button>
 
-                    <button
-                        id="redmine-preview-forward"
-                        type="button"
-                        title="Dalej"
-                        style="
-                            border: 0;
-                            background: transparent;
-                            cursor: pointer;
-                            font-size: 20px;
-                            padding: 5px 8px;
-                        "
-                    >
-                        →
-                    </button>
+    <button
+        id="redmine-preview-back"
+        type="button"
+        title="Wstecz"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px 8px;
+        "
+    >
+        ←
+    </button>
 
-                    <button
-                        id="redmine-preview-reload"
-                        type="button"
-                        title="Odśwież"
-                        style="
-                            border: 0;
-                            background: transparent;
-                            cursor: pointer;
-                            font-size: 18px;
-                            padding: 5px 8px;
-                        "
-                    >
-                        ↻
-                    </button>
+    <button
+        id="redmine-preview-forward"
+        type="button"
+        title="Dalej"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px 8px;
+        "
+    >
+        →
+    </button>
 
-                    <div
-                        id="redmine-preview-title"
-                        style="
-                            flex: 1;
-                            min-width: 0;
-                            overflow: hidden;
-                            white-space: nowrap;
-                            text-overflow: ellipsis;
-                            font-size: 13px;
-                            font-weight: 600;
-                            color: #333;
-                        "
-                    >
-                        Podgląd Redmine
-                    </div>
+    <button
+        id="redmine-preview-reload"
+        type="button"
+        title="Odśwież"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 8px;
+        "
+    >
+        ↻
+    </button>
 
-                    <a
-                        id="redmine-preview-open"
-                        href="#"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Otwórz bieżącą stronę w nowej karcie"
-                        style="
-                            border: 0;
-                            background: transparent;
-                            cursor: pointer;
-                            font-size: 18px;
-                            padding: 5px 8px;
-                            text-decoration: none;
-                            color: #333;
-                        "
-                    >
-                        ↗
-                    </a>
+    <div
+        id="redmine-preview-title"
+        style="
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        "
+    >
+        Podgląd Redmine
+    </div>
 
-                    <button
-                        id="redmine-preview-close"
-                        type="button"
-                        title="Zamknij"
-                        style="
-                            border: 0;
-                            background: transparent;
-                            cursor: pointer;
-                            font-size: 23px;
-                            font-weight: bold;
-                            padding: 5px 8px;
-                            color: #333;
-                        "
-                    >
-                        ×
-                    </button>
-                </div>
+    <button
+        id="redmine-preview-fullscreen"
+        type="button"
+        title="Pełny ekran"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 8px;
+            color: #333;
+        "
+    >
+        ⛶
+    </button>
+
+    <a
+        id="redmine-preview-open"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Otwórz bieżącą stronę w nowej karcie"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 8px;
+            text-decoration: none;
+            color: #333;
+        "
+    >
+        ↗
+    </a>
+
+    <button
+        id="redmine-preview-close"
+        type="button"
+        title="Zamknij"
+        style="
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 23px;
+            font-weight: bold;
+            padding: 5px 8px;
+            color: #333;
+        "
+    >
+        ×
+    </button>
+</div>
 
                 <div
                     style="
@@ -340,6 +360,26 @@
                 }
             });
 
+        panel
+            .querySelector('#redmine-preview-fullscreen')
+            .addEventListener('click', toggleFullscreen);
+
+        panel
+            .querySelector('#redmine-preview-go')
+            .addEventListener('click', () => {
+                try {
+                    const currentUrl =
+                          iframe.contentWindow.location.href;
+
+                    window.location.href = currentUrl;
+                } catch (error) {
+                    console.warn(
+                        '[Redmine preview] Nie można przejść do strony:',
+                        error
+                    );
+                }
+            });
+
         /*
          * Zdarzenie load uruchamia się po:
          *
@@ -368,6 +408,11 @@
         let startWidth = 0;
 
         handle.addEventListener('pointerdown', event => {
+
+            if (isFullscreen) {
+                return;
+            }
+
             resizing = true;
 
             startX = event.clientX;
@@ -398,8 +443,7 @@
                 )
             );
 
-            panel.style.width =
-                `${newWidth}px`;
+            panel.style.width = `${newWidth}px`;
         });
 
         handle.addEventListener('pointerup', event => {
@@ -589,5 +633,63 @@
 
         closePanel();
     });
+
+    function toggleFullscreen() {
+        if (!panel) {
+            return;
+        }
+
+        const fullscreenButton =
+              panel.querySelector('#redmine-preview-fullscreen');
+
+        if (!isFullscreen) {
+            /*
+         * Zapamiętujemy obecną szerokość,
+         * żeby można było ją później przywrócić.
+         */
+            widthBeforeFullscreen =
+                panel.getBoundingClientRect().width;
+
+            panel.style.top = '0';
+            panel.style.right = '0';
+            panel.style.bottom = '0';
+            panel.style.left = '0';
+
+            panel.style.width = '100vw';
+            panel.style.height = '100vh';
+
+            panel.style.borderLeft = '0';
+            panel.style.boxShadow = 'none';
+
+            isFullscreen = true;
+
+            fullscreenButton.textContent = '🗗';
+            fullscreenButton.title = 'Wyjdź z pełnego ekranu';
+
+        } else {
+            panel.style.top = '0';
+            panel.style.right = '0';
+            panel.style.bottom = 'auto';
+            panel.style.left = 'auto';
+
+            panel.style.width =
+                widthBeforeFullscreen
+                ? `${widthBeforeFullscreen}px`
+            : `${DEFAULT_WIDTH}px`;
+
+            panel.style.height = '100vh';
+
+            panel.style.borderLeft =
+                '1px solid #aaa';
+
+            panel.style.boxShadow =
+                '-6px 0 18px rgba(0, 0, 0, 0.20)';
+
+            isFullscreen = false;
+
+            fullscreenButton.textContent = '⛶';
+            fullscreenButton.title = 'Pełny ekran';
+        }
+    }
 
 })();
