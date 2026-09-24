@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine - podgląd podzadań w iframe
 // @namespace    redmine-subtask-preview
-// @version      1.1.0
+// @version      1.2.0
 // @description  Podgląd podzadań Redmine w wysuwanym panelu iframe
 // @match        https://redmine.x-code.pl/issues/*
 // @match        https://redmine.x-code.pl/projects/*
@@ -87,210 +87,215 @@
         });
 
         panel.innerHTML = `
-            <div
-                id="redmine-preview-resize"
-                style="
-                    position: absolute;
-                    left: -5px;
-                    top: 0;
-                    width: 10px;
-                    height: 100%;
-                    cursor: ew-resize;
-                    z-index: 20;
-                "
-            ></div>
+    <style>
+        .redmine-preview-toolbar-button {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
 
-            <div
-                style="
-                    display: flex;
-                    flex-direction: column;
-                    width: 100%;
-                    height: 100%;
-                    overflow: hidden;
-                "
-            >
-                <div
-    style="
-        flex: 0 0 46px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0 8px 0 12px;
-        background: #f5f5f5;
-        border-bottom: 1px solid #ccc;
-        font-family: Arial, Helvetica, sans-serif;
-        box-sizing: border-box;
-    "
->
-    <button
-        id="redmine-preview-go"
-        type="button"
-        title="Przejdź do tej strony"
-        style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+            margin: 0;
+
             border: 0;
+            border-radius: 3px;
             background: transparent;
-            cursor: pointer;
+
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 18px;
-            padding: 5px 8px;
-        "
-    >
-        ⇱
-    </button>
+            font-weight: normal;
+            line-height: 1;
 
-    <button
-        id="redmine-preview-back"
-        type="button"
-        title="Wstecz"
-        style="
-            border: 0;
-            background: transparent;
+            color: #333;
+            text-decoration: none;
+
             cursor: pointer;
-            font-size: 20px;
-            padding: 5px 8px;
-        "
-    >
-        ←
-    </button>
+            box-sizing: border-box;
+            vertical-align: middle;
+        }
 
-    <button
-        id="redmine-preview-forward"
-        type="button"
-        title="Dalej"
-        style="
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 5px 8px;
-        "
-    >
-        →
-    </button>
+        .redmine-preview-toolbar-button:hover {
+            background: #ddd;
+        }
 
-    <button
-        id="redmine-preview-reload"
-        type="button"
-        title="Odśwież"
-        style="
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px 8px;
-        "
-    >
-        ↻
-    </button>
+        #redmine-preview-close {
+            font-size: 22px;
+        }
 
-    <div
-        id="redmine-preview-title"
-        style="
+        #redmine-preview-title {
             flex: 1;
             min-width: 0;
+
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+
             font-size: 13px;
             font-weight: 600;
             color: #333;
-        "
-    >
-        Podgląd Redmine
-    </div>
+        }
 
-    <button
-        id="redmine-preview-fullscreen"
-        type="button"
-        title="Pełny ekran"
+        #redmine-preview-resize:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+
+    <div
+        id="redmine-preview-resize"
         style="
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px 8px;
-            color: #333;
+            position: absolute;
+            left: -5px;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            cursor: ew-resize;
+            z-index: 20;
         "
-    >
-        ⛶
-    </button>
+    ></div>
 
-    <a
-        id="redmine-preview-open"
-        href="#"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Otwórz bieżącą stronę w nowej karcie"
+    <div
         style="
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 5px 8px;
-            text-decoration: none;
-            color: #333;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         "
     >
-        ↗
-    </a>
+        <div
+            style="
+                flex: 0 0 46px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
 
-    <button
-        id="redmine-preview-close"
-        type="button"
-        title="Zamknij"
-        style="
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 23px;
-            font-weight: bold;
-            padding: 5px 8px;
-            color: #333;
-        "
-    >
-        ×
-    </button>
-</div>
+                padding: 0 8px 0 12px;
 
-                <div
-                    style="
-                        position: relative;
-                        flex: 1 1 auto;
-                        min-height: 0;
-                        background: #fff;
-                    "
-                >
-                    <iframe
-                        id="redmine-preview-frame"
-                        style="
-                            display: block;
-                            width: 100%;
-                            height: 100%;
-                            border: 0;
-                            background: #fff;
-                        "
-                    ></iframe>
+                background: #f5f5f5;
+                border-bottom: 1px solid #ccc;
 
-                    <div
-                        id="redmine-preview-loading"
-                        style="
-                            display: none;
-                            position: absolute;
-                            inset: 0;
-                            align-items: center;
-                            justify-content: center;
-                            background: rgba(255, 255, 255, 0.82);
-                            font-family: Arial, Helvetica, sans-serif;
-                            font-size: 14px;
-                            color: #444;
-                            z-index: 10;
-                            pointer-events: none;
-                        "
-                    >
-                        Ładowanie...
-                    </div>
-                </div>
+                font-family: Arial, Helvetica, sans-serif;
+
+                box-sizing: border-box;
+            "
+        >
+            <button
+                id="redmine-preview-go"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Przejdź do tej strony"
+            >
+                ⇱
+            </button>
+
+            <button
+                id="redmine-preview-back"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Wstecz"
+            >
+                ←
+            </button>
+
+            <button
+                id="redmine-preview-forward"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Dalej"
+            >
+                →
+            </button>
+
+            <button
+                id="redmine-preview-reload"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Odśwież"
+            >
+                ↻
+            </button>
+
+            <div id="redmine-preview-title">
+                Podgląd Redmine
             </div>
-        `;
+
+            <button
+                id="redmine-preview-fullscreen"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Pełny ekran"
+            >
+                ⛶
+            </button>
+
+            <a
+                id="redmine-preview-open"
+                class="redmine-preview-toolbar-button"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Otwórz bieżącą stronę w nowej karcie"
+            >
+                ↗
+            </a>
+
+            <button
+                id="redmine-preview-close"
+                class="redmine-preview-toolbar-button"
+                type="button"
+                title="Zamknij"
+            >
+                ×
+            </button>
+        </div>
+
+        <div
+            style="
+                position: relative;
+                flex: 1 1 auto;
+                min-height: 0;
+                background: #fff;
+            "
+        >
+            <iframe
+                id="redmine-preview-frame"
+                style="
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    background: #fff;
+                "
+            ></iframe>
+
+            <div
+                id="redmine-preview-loading"
+                style="
+                    display: none;
+                    position: absolute;
+                    inset: 0;
+
+                    align-items: center;
+                    justify-content: center;
+
+                    background: rgba(255, 255, 255, 0.82);
+
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 14px;
+                    color: #444;
+
+                    z-index: 10;
+                    pointer-events: none;
+                "
+            >
+                Ładowanie...
+            </div>
+        </div>
+    </div>
+`;
 
         document.documentElement.appendChild(panel);
 
@@ -551,29 +556,59 @@
     document.addEventListener(
         'click',
         event => {
+            /*
+             * Obsługujemy tylko lewy przycisk myszy.
+             *
+             * Ctrl / Shift / Cmd pozostają do standardowych
+             * funkcji przeglądarki, np. otwarcia nowej karty.
+             */
             if (
                 event.button !== 0 ||
                 event.ctrlKey ||
                 event.shiftKey ||
-                event.altKey ||
                 event.metaKey
             ) {
                 return;
             }
 
             const target =
-                  event.target instanceof Element
-            ? event.target
-            : null;
+                event.target instanceof Element
+                    ? event.target
+                    : null;
 
             if (!target) {
                 return;
             }
 
+            /*
+             * -------------------------------------------------------------
+             * IKONKA ↗
+             * -------------------------------------------------------------
+             *
+             * Jeżeli kliknięto naszą ikonkę bezpośredniego przejścia,
+             * NIE przechwytujemy zdarzenia.
+             *
+             * Zwykłe zachowanie <a href="..."> zrobi normalną nawigację.
+             */
+            const directLink =
+                target.closest(
+                    '[data-redmine-direct-link="1"]'
+                );
+
+            if (directLink) {
+                return;
+            }
+
+            /*
+             * -------------------------------------------------------------
+             * LINK DO ZAGADNIENIA
+             * -------------------------------------------------------------
+             */
+
             const link =
-                  target.closest(
-                      PREVIEW_LINK_SELECTOR
-                  );
+                target.closest(
+                    PREVIEW_LINK_SELECTOR
+                );
 
             if (!link) {
                 return;
@@ -583,11 +618,40 @@
                 return;
             }
 
+            /*
+             * -------------------------------------------------------------
+             * ALT + KLIK
+             * -------------------------------------------------------------
+             *
+             * Alt + klik powoduje bezpośrednie przejście
+             * głównego okna do zagadnienia.
+             */
+            if (event.altKey) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                window.location.href =
+                    link.href;
+
+                return;
+            }
+
+            /*
+             * -------------------------------------------------------------
+             * ZWYKŁY KLIK
+             * -------------------------------------------------------------
+             *
+             * Zatrzymujemy normalną nawigację
+             * i otwieramy zagadnienie w preview.
+             */
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
 
-            openPreview(link.href);
+            openPreview(
+                link.href
+            );
         },
         true
     );
@@ -691,5 +755,179 @@
             fullscreenButton.title = 'Pełny ekran';
         }
     }
+
+    function addDirectNavigationButtons() {
+        const links =
+            document.querySelectorAll(
+                PREVIEW_LINK_SELECTOR
+            );
+
+        links.forEach(link => {
+            /*
+             * Nie przetwarzamy ikon nawigacyjnych,
+             * które sami wcześniej dodaliśmy.
+             */
+            if (
+                link.dataset.redmineDirectLink === '1'
+            ) {
+                return;
+            }
+
+            /*
+             * Nie dodajemy ikonki drugi raz
+             * do tego samego oryginalnego linku.
+             */
+            if (
+                link.dataset.redmineDirectButtonAdded === '1'
+            ) {
+                return;
+            }
+
+            /*
+             * Tylko linki prowadzące do zagadnień.
+             */
+            if (!isIssueUrl(link.href)) {
+                return;
+            }
+
+            /*
+             * Oznaczamy oryginalny link jako obsłużony.
+             */
+            link.dataset.redmineDirectButtonAdded = '1';
+
+            const directLink =
+                document.createElement('a');
+
+            directLink.href =
+                link.href;
+
+            directLink.textContent =
+                '↗';
+
+            directLink.title =
+                'Przejdź bezpośrednio do zagadnienia';
+
+            /*
+             * To jest najważniejsze zabezpieczenie.
+             *
+             * Dzięki temu przy następnym skanowaniu
+             * rozpoznamy, że ten link został dodany
+             * przez nas i nie wolno dodawać do niego
+             * kolejnej ikonki.
+             */
+            directLink.dataset.redmineDirectLink =
+                '1';
+
+            /*
+             * Dodatkowe zabezpieczenie:
+             * traktujemy również samą ikonkę jako
+             * element już obsłużony.
+             */
+            directLink.dataset.redmineDirectButtonAdded =
+                '1';
+
+            Object.assign(
+                directLink.style,
+                {
+                    display: 'inline-block',
+                    marginLeft: '5px',
+                    padding: '0 2px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    opacity: '0.65',
+                    verticalAlign: 'baseline'
+                }
+            );
+
+            directLink.addEventListener(
+                'mouseenter',
+                () => {
+                    directLink.style.opacity =
+                        '1';
+                }
+            );
+
+            directLink.addEventListener(
+                'mouseleave',
+                () => {
+                    directLink.style.opacity =
+                        '0.65';
+                }
+            );
+
+            link.insertAdjacentElement(
+                'afterend',
+                directLink
+            );
+        });
+    }
+
+    function setupDirectNavigationButtons() {
+        /*
+         * Obsługujemy elementy istniejące
+         * podczas uruchomienia skryptu.
+         */
+        addDirectNavigationButtons();
+
+        let scheduled = false;
+
+        const observer =
+            new MutationObserver(mutations => {
+                /*
+                 * Nie reagujemy, jeśli zmiany dotyczą wyłącznie
+                 * naszych własnych ikonek.
+                 */
+                const hasRelevantChange =
+                    mutations.some(mutation => {
+                        return Array
+                            .from(mutation.addedNodes)
+                            .some(node => {
+                                if (!(node instanceof Element)) {
+                                    return false;
+                                }
+
+                                /*
+                                 * Nasza własna ikonka nie jest
+                                 * powodem do ponownego skanowania.
+                                 */
+                                if (
+                                    node.dataset?.redmineDirectLink === '1'
+                                ) {
+                                    return false;
+                                }
+
+                                return true;
+                            });
+                    });
+
+                if (!hasRelevantChange) {
+                    return;
+                }
+
+                if (scheduled) {
+                    return;
+                }
+
+                scheduled = true;
+
+                requestAnimationFrame(() => {
+                    scheduled = false;
+
+                    addDirectNavigationButtons();
+                });
+            });
+
+        observer.observe(
+            document.body,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
+    }
+
+    setupDirectNavigationButtons();
 
 })();
