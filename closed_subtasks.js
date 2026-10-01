@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Redmine Closed Removed From Subtasks
 // @namespace    https://github.com/extstopcodepls/redmine_closed_substasks_remover
-// @version      1.0.0
+// @version      1.0.1
 // @description  Usuwa linki z podzagadnień, które są zamkniętetam
 // @author       Paweł Borawski
 // @match        https://redmine.x-code.pl/issues/*
 // @grant        none
 //
-// @history      1 dodanie ustawień - dla każdego coś fajnego
+// @history      1.0.1 fix tresci przycisku
+// @history      1.0.0 dodanie ustawień - dla każdego coś fajnego
 // @history      0.9 dodanie kolorowania Uwagi oraz <select> zamiast przycisków do filtrowania. zapamiętanie wyfiltrowania
 //
 // ==/UserScript==
@@ -1375,7 +1376,7 @@ function addTreeControls() {
   const collapseLink = document.createElement("a");
 
   collapseLink.href = "#";
-  collapseLink.textContent = "Pokaż wszystkie";
+  collapseLink.textContent = "Zwiń";
 
   collapseLink.style.marginRight = "10px";
 
