@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Redmine Closed Removed From Subtasks
 // @namespace    https://github.com/extstopcodepls/redmine_closed_substasks_remover
-// @version      0.9
+// @version      1.0.0
 // @description  Usuwa linki z podzagadnień, które są zamkniętetam
 // @author       Paweł Borawski
 // @match        https://redmine.x-code.pl/issues/*
