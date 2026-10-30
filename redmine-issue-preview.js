@@ -1,14 +1,18 @@
 // ==UserScript==
 // @name         Redmine - podgląd podzadań w iframe
 // @namespace    redmine-subtask-preview
-// @version      1.2.1
+// @version      1.3.0
 // @description  Podgląd podzadań Redmine w wysuwanym panelu iframe
 // @match        https://redmine.x-code.pl/issues*
 // @match        https://redmine.x-code.pl/projects/*
+// @match        https://redmine.x-code.pl/my/page
 // @grant        none
 // @run-at       document-idle
 // @noframes
+//
+// @history      1.3.0 pogląd na mojej stronie
 // ==/UserScript==
+
 
 (function () {
     'use strict';
@@ -29,7 +33,16 @@
         'table.list.issues tr[id^="issue-"] td.parent a[href]',
 
         // Lista zagadnień - kolumna "Temat zadania nadrzędnego"
-        'table.list.issues tr[id^="issue-"] td.parent-subject a[href]'
+        'table.list.issues tr[id^="issue-"] td.parent-subject a[href]',
+
+        // "Moja strona" - zagadnienia we wszystkich blokach
+        '#my-page a[href]',
+
+        // Zagadnienia powiązane na stronie zagadnienia
+        '#relations td.subject a[href]',
+
+        // Zagadnienia powiązane na stronie wersji
+        'table.list.related-issues td.subject a[href]'
     ].join(', ');
 
     const DEFAULT_WIDTH = 950;
@@ -708,9 +721,9 @@
 
         if (!isFullscreen) {
             /*
-         * Zapamiętujemy obecną szerokość,
-         * żeby można było ją później przywrócić.
-         */
+             * Zapamiętujemy obecną szerokość,
+             * żeby można było ją później przywrócić.
+             */
             widthBeforeFullscreen =
                 panel.getBoundingClientRect().width;
 
@@ -739,7 +752,7 @@
             panel.style.width =
                 widthBeforeFullscreen
                 ? `${widthBeforeFullscreen}px`
-            : `${DEFAULT_WIDTH}px`;
+                : `${DEFAULT_WIDTH}px`;
 
             panel.style.height = '100vh';
 
